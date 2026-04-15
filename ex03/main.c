@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/14 19:52:49 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/15 12:04:23 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,3 +30,13 @@ int	main(void)
 		prev = current;
 	}
 }
+
+// int	prev = PIND & (1 << 2);
+
+	// en faisant ca on ne s'interesse qu'au bit numero 2
+	// (1 << 2) cree un masque 00000100
+	// PIND est soit 00000000 soit 00000100
+		// si PIND et le masque sont tous les 2 a 00000100
+			// prev = 4 (parce que 00000100 = 4)
+		// si PIND et le masque sont differents ou tous les 2 a 00000000 
+			// prev = 0
