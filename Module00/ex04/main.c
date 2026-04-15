@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/15 12:04:23 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/15 14:31:39 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,28 +15,43 @@
 
 int	main(void)
 {
-	DDRB |= (1 << 0);
-	DDRD &= ~(1 << 2);
-	PORTD |= (1 << 2);
-	int	prev = PIND & (1 << 2);
+	int	i = 0;
+	DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2) | (1 << PB4); // met les LED D1, D2, D3 et D4 du PORT B en sortie
+	DDRD &= ~(1 << PD2); // met le PORT D en entree
+	PORTD |= (1 << PD2) | (1 << PD4); // active les pull-up des SW1 et SW2
+	int	prev_SW1 = PIND & (1 << PD2); // garde l'etat de l'occurence precedente de SW1
+	int	prev_SW2 = PIND & (1 << PD4); // garde l'etat de l'occurence precedente de SW2
 	while (1)
 	{
-		int current = PIND & (1 << 2);
-		if (prev != 0 && current == 0)
+		int current_SW1 = PIND & (1 << PD2); // etat de l'occurence actuelle de SW1
+		int current_SW2 = PIND & (1 << PD4); // etat de l'occurence actuelle de SW2
+		if (prev_SW1 != 0 && current_SW1 == 0)
 		{
-			PORTB ^= (1 << 0);
+			i++;
 			_delay_ms(50);
-		}
-		prev = current;
+		} // on incremente i de 1 sur le bouton SW1 est presse
+		if (prev_SW2 != 0 && current_SW2 == 0)
+		{
+			i--;
+			_delay_ms(50);
+		} // on decremente i de 1 sur le bouton SW2 est presse
+		if (i & (1 << 0)) // resultat 0 ou 1
+			PORTB |= (1 << PB0); // si 1
+		else
+			PORTB &= ~(1 << PB0); // si 0
+		if (i & (1 << 1)) // resultat 0 ou 2
+			PORTB |= (1 << PB1); // si 2
+		else
+			PORTB &= ~(1 << PB1); // si 0
+		if (i & (1 << 2)) // resultat 0 ou 4
+			PORTB |= (1 << PB2); // si 4
+		else
+			PORTB &= ~(1 << PB2); // si 0
+		if (i & (1 << 3)) // resultat 0 ou 8
+			PORTB |= (1 << PB4); // si 8
+		else
+			PORTB &= ~(1 << PB4); // si 0
+		prev_SW1 = current_SW1;
+		prev_SW2 = current_SW2;
 	}
 }
-
-// int	prev = PIND & (1 << 2);
-
-	// en faisant ca on ne s'interesse qu'au bit numero 2
-	// (1 << 2) cree un masque 00000100
-	// PIND est soit 00000000 soit 00000100
-		// si PIND et le masque sont tous les 2 a 00000100
-			// prev = 4 (parce que 00000100 = 4)
-		// si PIND et le masque sont differents ou tous les 2 a 00000000 
-			// prev = 0
