@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/16 14:38:52 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/16 15:48:25 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,13 @@
 int	main(void)
 {
 	DDRB |= (1 << PB1); // met PB1 en sortie
-	TCCR1A |= (1 << COM1A0); // Toggle sur OC1A // Page 140 / 16.11.1 / Table 16-1
-	TCCR1B |= (1 << WGM12); // Mode CTC // Table 16-4
+	TCCR1A |= (1 << COM1A1); // non-inverting mode sur OC1A // Page 140 / 16.11.1 / Table 16-1
+	TCCR1B |= (1 << WGM13); // Mode fastPWM ICR1 en MAX & OCR1A en duty // Table 16-4
+	TCCR1B |= (1 << WGM12); // Mode fastPWM ICR1 en MAX & OCR1A en duty // Table 16-4
+	TCCR1A |= (1 << WGM11); // Mode fastPWM ICR1 en MAX & OCR1A en duty // Table 16-4
 	TCCR1B |= (1 << CS12); // Prescaler a 256 // Pages 142-143 / 16.11.2 / Bit 2:0 / Table 16-5
-	OCR1A = 31249;
+	ICR1 = 62499;
+	OCR1A = 6250;
 	
 	while (1)
 	{
@@ -65,6 +68,15 @@ int	main(void)
 	
 	// plus le prescaler est grand, plus le timer est lent
 
+	// le prescaler est un ralentisseur de temps !
+	// le CPU fait 16 000 000 de cycles en 1 seconde
+	// Le timer fait 16 bits
+		// On n'a donc que 65 536 cycles max pour compter
+		// 16 000 000 / 256 = 62 500
+		// 62 500 ca rentre dans 65 536
+		// grace au prescaler, on passe donc a 62.5 kHz (62 500 cycles par seconde)
+		// un bip toutes les 0.5 seconde = 62 500 / 2 = 31 250 cycles
+		
 
 /***********************************************************************************************/
 /****                                        OCR1A                                          ****/
@@ -93,4 +105,3 @@ int	main(void)
 // recommence
 
 // Cela cree un cycle regulier
-
