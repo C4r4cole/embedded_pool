@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/16 15:30:27 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/16 18:17:39 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ int	main(void)
 	TCCR1A |= (1 << COM1A0); // Toggle sur OC1A // Page 140 / 16.11.1 / Table 16-1
 	TCCR1B |= (1 << WGM12); // Mode CTC // Table 16-4
 	TCCR1B |= (1 << CS12); // Prescaler a 256 // Pages 142-143 / 16.11.2 / Bit 2:0 / Table 16-5
-	ICR1 = 31249;
+	OCR1A = 31249;
 	
 	while (1)
 	{
