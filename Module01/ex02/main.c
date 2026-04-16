@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/16 15:48:25 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/16 16:01:52 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,6 +86,15 @@ int	main(void)
 // c'est une valeur cible (la valeur que TCNT1 doit regoindra apres plusieurs incrementation)
 // quand TCNT1 == OCR1A alors quelque chose se produit
 
+// dans cet exo OCR1A est la valeur duty (et non pas la valeur TOP comme dans l'exercice precedent)
+// dans cet exo on le defini a 6 250 (soit 10% de OCR1A)
+
+/***********************************************************************************************/
+/****                                        OCR1A                                          ****/
+/***********************************************************************************************/
+
+// ICR1 est un registre alternatif a OCR1A qui peut etre utilise pour definir un TOP
+// dans cet exo on le defini a 62 500 (comme OCR1A dans l'exo precedent)
 
 /***********************************************************************************************/
 /****                                         OC1A                                          ****/
