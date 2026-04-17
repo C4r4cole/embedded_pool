@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/17 18:49:53 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/17 19:09:23 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,6 @@
 #include <avr/interrupt.h>
 #include <stdint.h>
 
-void TIMER1_COMPA_vect(void) __attribute__((signal, used)); // page 74 / Table 12-6
-
 void uart_tx(unsigned char data)
 {
 	while (!( UCSR0A & (1<<UDRE0)))
@@ -24,20 +22,16 @@ void uart_tx(unsigned char data)
 	UDR0 = data;
 }
 
-void uart_printstr(const char *str)
+unsigned char uart_rx(void)
 {
-	while (*str)
-	{
-		uart_tx(*str);
-		str++;
-	}
-	uart_tx('\r');
-	uart_tx('\n');
+	while (!( UCSR0A & (1<<RXC0)))
+	;
+	return (UDR0);
 }
 
 void uart_init(unsigned int ubrr)
 {
-	UCSR0A &= ~(1 << U2X0);
+	UCSR0A |= (1 << U2X0);
 	
 	UBRR0H = (unsigned char)(ubrr>>8);
 	UBRR0L = (unsigned char)ubrr;
@@ -49,31 +43,19 @@ void uart_init(unsigned int ubrr)
 	UCSR0C &= ~(1<<USBS0);
 }
 
-void timer_init(void)
-{
-	TCCR1B |= (1 << WGM12); // Mode CTC // Table 16-4
-	TCCR1B |= (1 << CS10); // Prescaler a 1024 // Pages 142-143 / 16.11.2 / Bit 2:0 / Table 16-5
-	TCCR1B |= (1 << CS12); // Prescaler a 1024 // Pages 142-143 / 16.11.2 / Bit 2:0 / Table 16-5
-	OCR1A = 31249;
-	TIMSK1 |= (1 << OCIE1A); // Pages 144-145 
-	
-	// 16 000 000 / 1024 = 15 625
-	// donc 15 625 cycles par seconde
-	// 15 625 x 2 = 31 250 pour 2 secondes
-}
-
-void TIMER1_COMPA_vect(void) // page 74 / Table 12-6
-{
-	uart_printstr("Hello World!");
-}
-
 int	main(void)
 {
-	uart_init(8);
-	timer_init();
-	SREG |= (1 << SREG_I); // 7.3.1 page 20
+	unsigned char c;
+	uart_init(16);
 	while (1)
 	{
+		c = uart_rx();
+		if (c == '\r')
+		{
+			uart_tx('\r');
+			uart_tx('\n');
+		}
+		uart_tx(c);	
 	}
 }
 
