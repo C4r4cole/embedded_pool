@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/17 19:09:23 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/20 11:48:12 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,17 +58,6 @@ int	main(void)
 		uart_tx(c);	
 	}
 }
-
-/**************************************************************************************/
-/*                                     TIMSK1                                         */
-/**************************************************************************************/
-
-// Time Interrupt MaSK Register
-// c'est le registre qui permet de declenche l'interruption
-	// il contient le bit OCIE1A que l'on passe a 1
-	// OCIE = Output Compare Iterrupt Enable
-	// en faisant cela, on permet au CPU de declencher une interruption quand le Timer
-	// match avec OCR1A
 	
 /**************************************************************************************/
 /*                                       ISR                                          */
