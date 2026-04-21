@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/20 17:23:37 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/21 13:50:38 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,7 +118,7 @@ void USART_RX_vect(void)
 
 	c = UDR0;
 
-	/* BACKSPACE: selon terminal, souvent 127 ou '\b' */
+	/* BACKSPACE */
 	if (c == 127 || c == '\b')
 	{
 		if (g_state == STATE_USERNAME && g_user_i > 0)
