@@ -6,19 +6,16 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/22 11:12:51 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/22 12:56:52 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <avr/io.h>
 #include <util/delay.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
 
 int	ft_atoi_hex(const char *nptr)
 {
-	size_t	i;
+	int		i;
 	int		sign;
 	int		nb;
 

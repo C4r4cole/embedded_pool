@@ -6,13 +6,12 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/21 14:02:10 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/22 12:53:27 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <avr/io.h>
 #include <util/delay.h>
-#include <stdint.h>
 
 int	main(void)
 {
