@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/21 13:09:46 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/21 14:02:10 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 int	main(void)
 {
-	DDRD |= (1 << PD3) | (1 << PD5) | (1<< PD6); // met PD3 en sortie
+	DDRD |= (1 << PD3) | (1 << PD5) | (1<< PD6); // met PD3, PD5 & PD6 en sortie
 	
 	while (1)
 	{
