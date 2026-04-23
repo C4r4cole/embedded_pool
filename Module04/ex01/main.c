@@ -6,95 +6,96 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/22 16:42:54 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/23 15:30:11 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <avr/io.h>
 #include <util/delay.h>
 
-volatile uint8_t g_wait_release = 0;
+volatile uint8_t up = 1;
+volatile uint16_t value = 0;
 
-void	led_d1_init()
+void	timer1_brightness()
 {
-	DDRB |= (1 << PB0); // met PB0 en sortie
-}
-
-void	button_sw1_init()
-{
-	DDRD &= ~(1 << PD2);
-	PORTD |= (1 << PD2); // active la pull-up sur SW1
+	DDRB |= (1 << PB1); // met PB1 en sortie
 	
-	EIMSK |= (1 << INT0); // on enable interrupt sur INT0
-	EICRA &= ~((1 << ISC01) | (1 << ISC00)); // ligne importante (on reset)
-	// et ensuite :
-	EICRA |= (1 << ISC01); // parametrage sur falling edge (Table13-2 p80)
+	// Waveform Generation Mode : fast PWM with TOP at ICR1 // Table 16-4 p 142
+	TCCR1B |= (1 << WGM13) | (1 << WGM12);
+	TCCR1A |= (1 << WGM11);
 	
-}
+	// prescaler a 8
+	// pour que le scintillement soit invisible a l'oeil nu, il faut etre superieur a 2kHz
+	// Formule : F_CPU / (prescaler * (1 + TOP)
+	// 16 000 000 / ( 8 * 1001) = 2000 (soit 2kHz)
+	TCCR1B |= (1 << CS11);
+	// TCCR1B |= (1<< CS10) | (1 << CS11); // test avec prescaler a 64
 
-void timer1_init(void)
-{
-	TCCR1A = 0;
-	TCCR1B = 0;
-	// on les reset pour eviter de risquer de garder des bits indesirables des boucles precedentes
 	
-	TCCR1B |= (1 << WGM12);  // mode CTC
+	TCCR1A |= (1 << COM1A1);
 
-	// Pour F_CPU = 16 MHz, prescaler 64 :
-	// 16 MHz / 64 = 250000 Hz
-	// 20 ms => 5000 ticks => OCR1A = 4999
-	OCR1A = 4999;
-
-	TIMSK1 |= (1 << OCIE1A); // Enable interruption compare A
+	ICR1 = 1000;
+	// ICR1 = 124; // test avec prescaler a 64
+	OCR1A = 0;
 }
 
-void INT0_vect(void) __attribute__((signal, used)); // page 74 / Table 12-6
-
-void INT0_vect(void)
+void	timer0_brightness_update()
 {
-	EIMSK &= ~(1 << INT0); // désactive INT0 pendant debounce
+	// Waveform Generation Mode : CTC with TOP at OCRA Table 15-8 p 115
+	TCCR0A |= (1 << WGM01);
 
-	if (g_wait_release == 0)
-	{
-		// on vient de détecter l'appui
-		PORTB ^= (1 << PB0);
-		g_wait_release = 1;
+	// Prescaler 64 Table 15-9
+	TCCR0B |= (1 << CS00) | (1 << CS01);
 
-		// prochaine interruption : rising edge
-		EICRA &= ~((1 << ISC01) | (1 << ISC00));
-		EICRA |= (1 << ISC01) | (1 << ISC00);
-	}
-	else
-	{
-		// on vient de détecter le relâchement
-		g_wait_release = 0;
-
-		// prochaine interruption : falling edge
-		EICRA &= ~((1 << ISC01) | (1 << ISC00));
-		EICRA |= (1 << ISC01);
-	}
-
-	TCNT1 = 0;
-	TCCR1B |= (1 << CS11) | (1 << CS10); // start timer1, prescaler 64
+	// Interruption on OCRA section 15.9.6 p 118
+	TIMSK0 |= (1 << OCIE0A);
+	
+	// Avec prescaler a 64 : 16 000 000 / 64 = 250 000
+	// Le Timer compte donc jusqu'a 250 000 en 1 sec
+	// Si par exemple on choisi 1000 interruptions par secondes alors : 
+	OCR0A = 250000 / 1000;
 }
 
+void TIMER0_COMPA_vect(void) __attribute__((signal, used));
 
-void TIMER1_COMPA_vect(void) __attribute__((signal, used));
-
-void	TIMER1_COMPA_vect()
+void TIMER0_COMPA_vect()
 {
-	// stop timer
-	TCCR1B &= ~((1 << CS12) | (1 << CS11) | (1 << CS10));
+    static uint16_t count = 0;
 
-	EIFR |= (1 << INTF0);    // clear flag éventuel
-	EIMSK |= (1 << INT0);    // réactive INT0
+    count++;
+
+    if (count >= 10) // toutes les 10 ms (donc on fait qqch toutes les 10 interruptions)
+    {
+        count = 0;
+
+        if (up)
+        {
+            value += 20;
+            if (value >= 1000)
+            {
+                value = 1000;
+                up = 0;
+            }
+        }
+        else
+        {
+            if (value > 20)
+                value -= 20;
+            else
+            {
+                value = 0;
+                up = 1;
+            }
+        }
+
+        OCR1A = value;
+    }
 }
 
 int	main(void)
 {
-	led_d1_init();
-	button_sw1_init();
-	timer1_init();
+	timer1_brightness();
+	timer0_brightness_update();
 	SREG |= (1 << SREG_I);
 	while (1)
 	{
