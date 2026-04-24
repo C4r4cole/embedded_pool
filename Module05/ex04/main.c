@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/24 15:44:02 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/24 17:30:25 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,22 +108,10 @@ int	main(void)
 			;
 		result = ADC; // Il faut lire le resultat seulement apres la conversion of course !!!
 		wheel(result / 4);
-		if (result < 256)
-		{
-			PORTB |= (1 << PB0);
-			PORTB &= ~ (1 << PB1);
-		}
-		if (result > 255 && result < 512)
-		{
-			PORTB |= (1 << PB1);
-			PORTB &= ~ (1 << PB2);
-		}
-		if (result > 511 && result < 768)
-		{
-			PORTB |= (1 << PB2);
-			PORTB &= ~ (1 << PB4);
-		}
-		if (result > 767 && result < 1024)
-			PORTB |= (1 << PB4);
+		PORTB = 0;
+		if (result >= 256)		PORTB |= (1 << PB0);
+		if (result >= 2*256)	PORTB |= (1 << PB1);
+		if (result >= 3*256)	PORTB |= (1 << PB2);
+		if (result == 1023)		PORTB |= (1 << PB4);
 	}
 }

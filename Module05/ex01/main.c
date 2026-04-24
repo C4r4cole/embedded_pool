@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/24 14:53:12 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/24 17:22:02 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,30 +50,30 @@ void uart_printstr(const char* str)
     }
 }
 
-
 void uart_printhex(uint32_t num)
 {
-    const char hex[] = "0123456789ABCDEF";
-    char buf[8];
-    uint32_t i = 0;
+	const char hex[] = "0123456789abcdef";
+	char buf[8];
+	uint32_t i = 0;
 
-	uart_printstr("0x");
-    if (num == 0)
-    {
-        uart_tx('0');
-        return;
-    }
+	if (num == 0)
+	{
+		uart_tx('0');
+		uart_tx('0');
+		return;
+	}
 
-    while (num > 0 && i < sizeof(buf))
-    {
-        buf[i++] = hex[num % 16];
-        num /= 16;
-    }
+	while (num > 0 && i < sizeof(buf))
+	{
+		buf[i++] = hex[num % 16];
+		num /= 16;
+	}
 
-    while (i > 0)
-    {
-        uart_tx(buf[--i]);
-    }
+	if (i == 1)
+		uart_tx('0');
+
+	while (i > 0)
+		uart_tx(buf[--i]);
 }
 
 void	adc_init()
@@ -94,7 +94,7 @@ void	adc_init()
 		// si la carte est a 5V alors la valeur de reference est de 5V
 	
 	// 2 - choix de l'alignement du resultat
-	ADMUX &= ~(1 << ADLAR);
+	ADMUX |= (1 << ADLAR);
 		// ADLAR bit a 0 = alignement a droite
 
 	// 3 - choix du canal avec MUX Table 24-4 p 258
@@ -120,7 +120,7 @@ int	main(void)
 {
 	uart_init(16);
 	adc_init();
-	uint16_t result;
+	uint8_t result;
 	while (1)
 	{
 		ADMUX &= ~((1<<MUX0)|(1<<MUX1)|(1<<MUX2)|(1<<MUX3));
@@ -129,7 +129,7 @@ int	main(void)
 		// Tant qu'une conversion est en cours
 		while (ADCSRA & (1 << ADSC))
 			;
-		result = ADC; // Il faut lire le resultat seulement apres la conversion of course !!!
+		result = ADCH; // Il faut lire le resultat seulement apres la conversion of course !!!
 		uart_printhex(result);
 		uart_printstr(", ");
 
@@ -140,7 +140,7 @@ int	main(void)
 		// Tant qu'une conversion est en cours
 		while (ADCSRA & (1 << ADSC))
 			;
-		result = ADC; // Il faut lire le resultat seulement apres la conversion of course !!!
+		result = ADCH; // Il faut lire le resultat seulement apres la conversion of course !!!
 		uart_printhex(result);
 		uart_printstr(", ");
 
@@ -151,7 +151,7 @@ int	main(void)
 		// Tant qu'une conversion est en cours
 		while (ADCSRA & (1 << ADSC))
 			;
-		result = ADC; // Il faut lire le resultat seulement apres la conversion of course !!!
+		result = ADCH; // Il faut lire le resultat seulement apres la conversion of course !!!
 		uart_printhex(result);
 		uart_printstr("\r\n");
 		
