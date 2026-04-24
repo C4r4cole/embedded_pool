@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/24 14:53:12 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/24 14:51:48 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,29 +51,46 @@ void uart_printstr(const char* str)
 }
 
 
-void uart_printhex(uint32_t num)
+char	*itoa(int n, char *str, int base)
 {
-    const char hex[] = "0123456789ABCDEF";
-    char buf[8];
-    uint32_t i = 0;
+	long	nb;
+	int		i;
+	int		sign;
 
-	uart_printstr("0x");
-    if (num == 0)
-    {
-        uart_tx('0');
-        return;
-    }
-
-    while (num > 0 && i < sizeof(buf))
-    {
-        buf[i++] = hex[num % 16];
-        num /= 16;
-    }
-
-    while (i > 0)
-    {
-        uart_tx(buf[--i]);
-    }
+	if (base < 2 || base > 16)
+		return (0);
+	nb = n;
+	sign = 0;
+	i = 0;
+	if (nb < 0 && base == 10)
+	{
+		sign = 1;
+		nb = -nb;
+	}
+	if (nb == 0)
+		str[i++] = '0';
+	while (nb > 0)
+	{
+		if (nb % base < 10)
+			str[i++] = (nb % base) + '0';
+		else
+			str[i++] = (nb % base) - 10 + 'A';
+		nb /= base;
+	}
+	if (sign)
+		str[i++] = '-';
+	str[i] = '\0';
+	i--;
+	sign = 0;
+	while (sign < i)
+	{
+		char tmp = str[sign];
+		str[sign] = str[i];
+		str[i] = tmp;
+		sign++;
+		i--;
+	}
+	return (str);
 }
 
 void	adc_init()
@@ -118,9 +135,10 @@ void	adc_init()
 
 int	main(void)
 {
+	uint16_t 	result;
+	char		buf[8];
 	uart_init(16);
 	adc_init();
-	uint16_t result;
 	while (1)
 	{
 		ADMUX &= ~((1<<MUX0)|(1<<MUX1)|(1<<MUX2)|(1<<MUX3));
@@ -130,7 +148,7 @@ int	main(void)
 		while (ADCSRA & (1 << ADSC))
 			;
 		result = ADC; // Il faut lire le resultat seulement apres la conversion of course !!!
-		uart_printhex(result);
+		uart_printstr(itoa(result, buf, 10));
 		uart_printstr(", ");
 
 		ADMUX &= ~((1<<MUX1)|(1<<MUX2)|(1<<MUX3));
@@ -141,7 +159,7 @@ int	main(void)
 		while (ADCSRA & (1 << ADSC))
 			;
 		result = ADC; // Il faut lire le resultat seulement apres la conversion of course !!!
-		uart_printhex(result);
+		uart_printstr(itoa(result, buf, 10));
 		uart_printstr(", ");
 
 		ADMUX &= ~((1<<MUX0)|(1<<MUX2)|(1<<MUX3));
@@ -152,7 +170,7 @@ int	main(void)
 		while (ADCSRA & (1 << ADSC))
 			;
 		result = ADC; // Il faut lire le resultat seulement apres la conversion of course !!!
-		uart_printhex(result);
+		uart_printstr(itoa(result, buf, 10));
 		uart_printstr("\r\n");
 		
 		_delay_ms(20);
