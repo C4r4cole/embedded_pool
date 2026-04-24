@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/24 14:22:26 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/24 14:42:44 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,7 +98,7 @@ void	adc_init()
 		// ADLAR bit a 0 = alignement a droite
 
 	// 3 - choix du canal avec MUX Table 24-4 p 258
-	ADMUX &= ~((1<<MUX0)|(1<<MUX1)|(1<<MUX2)|(1<<MUX3));
+	// ADMUX &= ~((1<<MUX0)|(1<<MUX1)|(1<<MUX2)|(1<<MUX3));
 		// tous les bits a 0 donc ADC0 (ADC0 correspond a la pin du potentiometre)
 
 	// Initializing ADCSRA // C'est le registre de controle de l'ADC
@@ -123,6 +123,29 @@ int	main(void)
 	uint16_t result;
 	while (1)
 	{
+		ADMUX &= ~((1<<MUX0)|(1<<MUX1)|(1<<MUX2)|(1<<MUX3));
+		// Lance la conversion analog to digital
+		ADCSRA |= (1 << ADSC);
+		// Tant qu'une conversion est en cours
+		while (ADCSRA & (1 << ADSC))
+			;
+		result = ADC; // Il faut lire le resultat seulement apres la conversion of course !!!
+		uart_printhex(result);
+		uart_printstr(", ");
+
+		ADMUX &= ~((1<<MUX1)|(1<<MUX2)|(1<<MUX3));
+		ADMUX |= (1<<MUX0);
+		// Lance la conversion analog to digital
+		ADCSRA |= (1 << ADSC);
+		// Tant qu'une conversion est en cours
+		while (ADCSRA & (1 << ADSC))
+			;
+		result = ADC; // Il faut lire le resultat seulement apres la conversion of course !!!
+		uart_printhex(result);
+		uart_printstr(", ");
+
+		ADMUX &= ~((1<<MUX0)|(1<<MUX2)|(1<<MUX3));
+		ADMUX |= (1<<MUX1);
 		// Lance la conversion analog to digital
 		ADCSRA |= (1 << ADSC);
 		// Tant qu'une conversion est en cours
@@ -131,6 +154,7 @@ int	main(void)
 		result = ADC; // Il faut lire le resultat seulement apres la conversion of course !!!
 		uart_printhex(result);
 		uart_printstr("\r\n");
+		
 		_delay_ms(20);
 	}
 }
