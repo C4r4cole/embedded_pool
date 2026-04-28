@@ -6,12 +6,14 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/28 17:21:45 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/28 18:22:36 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include <util/twi.h>
+#include <stdlib.h>
 
 void uart_init(unsigned int ubrr)
 {
@@ -187,7 +189,12 @@ char	*itoa(int n, char *str, int base)
 
 int	main(void)
 {
-	char	c;
+	uint8_t	data[7];
+	char	buf[20];
+	uint32_t humidity_raw;
+	float humidity;
+	uint32_t temperature_raw;
+	float temperature;
 	uart_init(16);
 	i2c_init();
 	while (1)
@@ -215,12 +222,21 @@ int	main(void)
 		i2c_write((0x38 << 1) | 1); // on met le dernier bit a 1 donc read
 		for (int i = 0; i < 6; i++)
 		{
-			c = i2c_read_ack();	// on recupere les 6 premiers octets avec aknowledgment
-			print_hex_value(c);
-			uart_tx(' ');
+			data[i] = i2c_read_ack();	// on recupere les 6 premiers octets avec aknowledgement
+			// print_hex_value(data[i]);
+			// uart_tx(' ');
 		}
-		c = i2c_read_nack(); // on recupere le 7eme octet sans acknowledgment
-		print_hex_value(c);
+		data[6] = i2c_read_nack(); // on recupere le 7eme octet sans acknowledgment
+		// print_hex_value(data[6]);
+		humidity_raw = ((uint32_t)data[1] << 12) | ((uint32_t)data[2] << 4) | ((uint32_t)data[3] >> 4);
+		humidity = humidity_raw * 100.00 / 1048576.0;
+		temperature_raw = ((uint32_t)(data[3] & 0x0F) << 16) | ((uint32_t)data[4] << 8) | ((uint32_t)data[5]);
+		temperature = temperature_raw * 200.00 / 1048576.0 - 50.0;
+		uart_printstr("Temperature: ");
+		uart_printstr(dtostrf(temperature, 0, 0, buf));
+		uart_printstr(".C, Humidity: ");
+		uart_printstr(dtostrf(humidity, 0, 1, buf));
+		uart_tx('%');
 		uart_tx('\r');
 		uart_tx('\n');
 		i2c_stop();
