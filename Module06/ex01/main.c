@@ -6,7 +6,7 @@
 /*   By: fmoulin <fmoulin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/14 13:36:10 by fmoulin           #+#    #+#             */
-/*   Updated: 2026/04/28 14:52:27 by fmoulin          ###   ########.fr       */
+/*   Updated: 2026/04/28 17:08:08 by fmoulin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,6 +90,59 @@ void	i2c_stop(void)
 	TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN);
 }
 
+void	i2c_write(unsigned char data)
+{
+	// on stock la data dans TWDR qui est le registre de data (22.9.4 p 241)
+	TWDR = data;
+	TWCR = (1 << TWINT) | (1 << TWEN);
+	// TWINT = 0 → le module travaille
+	// TWINT = 1 → le module a fini, résultat prêt
+	while (!(TWCR & (1 << TWINT)))
+		;
+}
+
+void i2c_read(void)
+{
+}
+
+uint8_t i2c_read_ack(void)
+{
+	// ici on active le flag acknowledgment
+	// cela sert a dire "je suis pret a recevoir un autre bit"
+	TWCR = (1 << TWINT) | (1 << TWEA) | (1 << TWEN);
+	while (!(TWCR & (1 << TWINT)))
+		;
+	return (TWDR);
+}
+
+uint8_t i2c_read_nack(void)
+{
+	// ici c'est la meme fonction read mais sans l'acknowledgment car on utilise cette fonction pour le dernier bit
+	TWCR = (1 << TWINT) | (1 << TWEN);
+	while (!(TWCR & (1 << TWINT)))
+		;
+	return (TWDR);
+}
+
+void print_hex_value(uint8_t c)
+{
+	uint8_t high;
+	uint8_t low;
+
+	high = c >> 4;
+	low = c & 0x0F;
+
+	if (high >= 0 && high <= 9)
+		uart_tx('0' + high);
+	else if ( high >= 10 && high <= 15)
+		uart_tx('A' + high - 10);
+
+	if (low >= 0 && low <= 9)
+		uart_tx('0' + low);
+	else if ( low >= 10 && low <= 15)
+		uart_tx('A' + low - 10);
+}
+
 char	*itoa(int n, char *str, int base)
 {
 	long	nb;
@@ -134,20 +187,51 @@ char	*itoa(int n, char *str, int base)
 
 int	main(void)
 {
-	uint8_t	status;
-	char	buf[8];
+	char	c;
 	uart_init(16);
 	i2c_init();
 	while (1)
 	{
 		i2c_start();
-
-		status = TWSR & 0xF8;
-		uart_printstr(itoa(status, buf, 10));
-		uart_printstr("\r\n");
-				
+		// le premier write sert a dire a quelle adresse on parle
+			// on decale l'adresse de 1 bit vers la gauche
+			// car le dernier bit sert a dire si on write ou on read
+				// 0 = write
+				// 1 = read
+		i2c_write(0x38 << 1); // on ne touche pas au dernier bit donc write
+		i2c_write(0xAC); // cet octet est le Trigger Measurement command (lance un conversion maintenant) (etape 2)
+		i2c_write(0x33); // bit de configuration impose par le constructeur (etape 2)
+		i2c_write(0x00); // bit de configuration impose par le constructeur (etape 2)
 		i2c_stop();
 
-		_delay_ms(20);
+		_delay_ms(80); // 80 ms d'attente imposees par le constructeur (etape 3)
+
+		i2c_start();
+		// le premier write sert a dire a quelle adresse on parle
+			// on decale l'adresse de 1 bit vers la gauche
+			// car le dernier bit sert a dire si on write ou on read
+				// 0 = write
+				// 1 = read
+		i2c_write((0x38 << 1) | 1); // on met le dernier bit a 1 donc read
+		for (int i = 0; i < 6; i++)
+		{
+			c = i2c_read_ack();	// on recupere les 6 premiers octets avec aknowledgement
+			print_hex_value(c);
+			uart_tx(' ');
+		}
+		c = i2c_read_nack(); // on recupere le 7eme octet sans acknowledgment
+		print_hex_value(c);
+		uart_tx('\r');
+		uart_tx('\n');
+		i2c_stop();
+		
+		_delay_ms(80);
 	}
 }
+
+
+// datasheet de l'AHT20
+	// https://files.seeedstudio.com/wiki/Grove-AHT20_I2C_Industrial_Grade_Temperature_and_Humidity_Sensor/AHT20-datasheet-2020-4-16.pdf
+// le Sensor reading process est explique en page 8/11
+// Les 7 octets donnes par l'AHT20 correspondent a :
+// [status] [humidity byte1] [humidity byte2] [humidity/temp mix] [temp byte1] [temp byte2] [CRC]
